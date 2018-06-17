@@ -57,13 +57,14 @@ public:
 	ros::ServiceClient exploration_plan_service_client;
 	ros::Publisher pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 	ros::Subscriber sub1 = n.subscribe("/slam_out_pose", 1, &Pubsub::callback, this);
-    ros::Subscriber sonar1 = n.subscribe("/sonar1", 2, &Pubsub::callback1, this);
+        ros::Subscriber sonar1 = n.subscribe("/sonar1", 2, &Pubsub::callback1, this);
 	ros::Subscriber sonar2 = n.subscribe("/sonar2", 2, &Pubsub::callback2, this);
 	ros::Subscriber sonar3 = n.subscribe("/sonar3", 2, &Pubsub::callback3, this);
 	ros::Subscriber sonar4 = n.subscribe("/sonar4", 2, &Pubsub::callback4, this);
+        ros::Subscriber click = n.subscribe("/clicked_point",1,&Pubsub::callback_click,this);
 	
 	
-    void callservice()
+        void callservice()
 	{
 		hector_nav_msgs::GetRobotTrajectory srv_exploration_plan;
 		exploration_plan_service_client = n.serviceClient<hector_nav_msgs::GetRobotTrajectory>("get_exploration_path");
@@ -77,6 +78,29 @@ public:
 		}
 	}
 	
+        //callback for the clicked point
+
+        void callback_click(const geometry_msgs::PointStamped& click)
+        {
+            ROS_WARN("Click Data received, do you want to stop the robot from following the path and instead want to reach the clicked location ? (y/n)");
+            char response;
+            std::cin>>response;
+            if (response=='y' || response=='Y')
+            {
+                point_list.clear();
+                Position* point = new Position;
+                point->setPosition(click.point.x,click.point.y,0.0);
+                point_list.push_back(*point);
+                delete point;
+            }
+            if (response=='n' || response=='N')
+            {
+                ROS_INFO("Ignoring the click command");
+            }
+            execute_points();
+
+        }
+
 	//callback to set the current position
 
 	void callback(const geometry_msgs::PoseStamped &data)
@@ -127,12 +151,15 @@ public:
         ROS_INFO("Making a list now");
 		
         ROS_INFO("size is %d",msg.size());
-		for(geometry_msgs::PoseStamped it : msg)
+        int element_skip=1;
+        element_skip = msg.size()%5;
+        std::vector<geometry_msgs::PoseStamped>::const_iterator it;
+                for( it = msg.begin();it!=msg.end();it=it+element_skip)
 		{
-            Position* point = new Position;
-           	point->setPosition(it.pose.position.x,it.pose.position.y,0);
-			point_list.push_back(*point);
-            delete point;
+                    Position* point = new Position;
+                    point->setPosition(it->pose.position.x,it->pose.position.y,0);
+                    point_list.push_back(*point);
+                    delete point;
             //ROS_INFO("point_added");
 		}
 		execute_points();
