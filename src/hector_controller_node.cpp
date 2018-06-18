@@ -98,6 +98,9 @@ public:
                 ROS_INFO("Ignoring the click command");
             }
             execute_points();
+            ros::spinOnce();
+            point_list.clear();
+            this->callservice();
 
         }
 
@@ -152,9 +155,9 @@ public:
 		
         ROS_INFO("size is %d",msg.size());
         int element_skip=1;
-        element_skip = msg.size()%5;
+        element_skip = (msg.size() - (msg.size()%5))/5;
         std::vector<geometry_msgs::PoseStamped>::const_iterator it;
-                for( it = msg.begin();it!=msg.end();it=it+element_skip)
+                for( it = msg.begin();it!=msg.end();it++)
 		{
                     Position* point = new Position;
                     point->setPosition(it->pose.position.x,it->pose.position.y,0);
