@@ -74,7 +74,7 @@ public:
 		}
 		else
 		{
-			ROS_ERROR("Failed to call service");
+			//ROS_ERROR("Failed to call service");
 		}
 	}
 	
@@ -197,7 +197,7 @@ public:
 		}
         int angsign = 1;
 		int obsign= 1;
-		while (distance(cur, pos) > 0.20)
+		while (distance(cur, pos) > 0.10)
 		{
             //ROS_INFO("distance from obsacle is %f",obstacle_range());
             angle = atan((cur.y - pos.y) / (cur.x - pos.x));
@@ -218,7 +218,7 @@ public:
 			geometry_msgs::Twist twist;
             float kp=0.15,ki=0.025,error,error_sum=0.0;
 			//std::cout << curr_angle - angle << std::endl;
-			while (fabs(curr_angle - angle) > 0.025)
+			while (fabs(curr_angle - angle) > 0.06)
 			{
                 ros::spinOnce();
                 angle = atan((cur.y - pos.y) / (cur.x - pos.x));
@@ -239,7 +239,7 @@ public:
                 //r.sleep();
 				
 			}
-			twist.linear.x = -1.75 * sign;
+			twist.linear.x = -0.2 * sign;
 			twist.angular.z = 0.0;
 			pub.publish(twist);
 			ros::spinOnce();
